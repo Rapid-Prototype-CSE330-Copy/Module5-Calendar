@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calendar</title>
+</head>
+<body>
+<?php
+        session_start();
+        $_SESSION['token'] = bin2hex(openssl_random_pseudo_bytes(32));
+    ?>
+
+<div id="loginsAndRegisters">
+    <button class="btn" onclick="showLoginModal()">Login</button>
+    <button class="btn" onclick="showRegisterModal()">Register</button>
+</div>
+
+
+<button id="logout_btn" class="btn" style="display: none">Logout</button>
+<br>
+
+<h1 id="welcomeText">You are viewing the calendar as guest</h1>
+<br>
+
+<div>
+    <text hidden="hidden">ID: </text>
+    <text id="idText" hidden="hidden">0</text>
+</div>
+
+<br>
+<button id="switchToCurrentDate_btn" hidden="hidden">Switch to Today</button>
+<button id="printCurrentDate_btn" hidden="hidden">Print currentDate</button>
+<p id="currentDateText" hidden="hidden">currentDate: </p>
+
+<br>
+
+<div id="calendarButtons" style="display: flex;align-items: center;gap: 8px;margin-bottom: 15px;font-size: 22px;">
+    <button id="getPreviousYear_btn" class="btn btn-sm">&laquo;</button>
+    <button id="getPreviousMonth_btn" class="btn btn-sm">&lsaquo;</button>
+    <b id="yearText">1000</b>
+    -
+    <b id="monthText">Jan</b>
+    <button id="getNextMonth_btn" class="btn btn-sm">&rsaquo;</button>
+    <button id="getNextYear_btn" class="btn btn-sm">&raquo;</button>
+
+    <!-- <b id="dayText">01</b> -->
+</div>
+
+<style>
+    table, th, td {
+        border: 1px solid black;
+        border-collapse: collapse;
+    }
+
+    th, td {
+        padding: 15px;
+    }
+</style>
+
+<table id="calendar" style="width: 100%;">
+    <tr>
+        <th>Sun</th>
+        <th>Mon</th>
+        <th>Tue</th>
+        <th>Wed</th>
+        <th>Thu</th>
+        <th>Fri</th>
+        <th>Sat</th>
+    </tr>
+    <tr class="dateRow"></tr>
+    <tr class="dateRow"></tr>
+    <tr class="dateRow"></tr>
+    <tr class="dateRow"></tr>
+    <tr class="dateRow"></tr>
+    <tr class="dateRow"></tr>
+
+
+</table>
+
+<br>
+<h1 id="eventHeaderText">Events on this date:</h1>
+<div id="createEventWrapper">
+
+</div>
+<ul id="eventList">
+
+</ul>
+
+<div id="eventButtons">
+    <button id="alertEvents_btn" hidden="hidden">Alert Events</button>
+    <button id="printCurrentEventId_btn" hidden="hidden">print currentEventId</button>
+    <br>
+    <button id="changeImportance_btn" hidden="hidden">Change The Importance of Selected Event</button>
+    <br>
+    <label>Invite this user to your selected event</label>
+    <input type="text" id="invitedUsernameInput" placeholder="Username">
+    <button id="invite_btn">Invite</button>
+    <label>Group members of this event:</label><text id="groupMemberUsernameText">None</text>
+    
+    
+    <br>
+    <label>Copy this event to the next </label><input type="number" id="weekNum"><label>weeks</label>
+    <button id="copyEvent_btn">Copy</button>
+</div>
+
+<div hidden="hidden">
+    Group members of this event:
+    <button id="displayMembers_btn" hidden="hidden">Display</button>
+    <text id="groupMemberUsernameText">None</text>
+    <br>
+    currentEventId:
+    <text id="currentEventIdText"></text>
+</div>
+
+
+<style>
+    #shade {
+        display: none;
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #000;
+        opacity: 0.7;
+        filter: alpha(opacity=70);
+        overflow: hidden;
+    }
+
+    .modal {
+        display: none;
+        width: 350px;
+        min-height: 150px;
+        position: absolute;
+        padding: 10px 20px;
+        top: 30%;
+        left: 50%;
+        transform: translateX(-50%) translateY(-50%);
+        background: #fff;
+        border-radius: 4px;
+    }
+
+
+    /* form: label & input style */
+    .form-item {
+        margin-bottom: 10px;
+    }
+
+    .form-item label {
+        display: inline-block;
+        width: 110px;
+    }
+
+    /* button style */
+    .btn {
+        display: inline-block;
+        outline: none;
+        background-color: rgb(0, 123, 255);
+        padding: 6px 12px;
+        color: white;
+        border-radius: 4px;
+        border: 1px solid transparent;
+        line-height: 1.5;
+        font-size: 1rem;
+        cursor: pointer;
+    }
+
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: .875rem;
+        line-height: 1.5;
+        border-radius: 0.2rem;
+    }
+</style>
+
+<div id="shade"></div>
+<div class="modal" id="login-modal">
+    <h2>Login</h2>
+    <div>
+        <div class="form-item">
+            <label for="usernameInput">Username:</label>
+            <input type="text" id="usernameInput" placeholder="Username">
+        </div>
+        <div class="form-item">
+            <label for="passwordInput">Password:</label>
+            <input type="password" id="passwordInput" placeholder="Password">
+        </div>
+        <input type="hidden" name="token" value="<?php echo $_SESSION['token'];?>">
+        <button class="btn" id="login_btn">Login</button>
+        <button class="btn" onclick="closeModal()">Cancel</button>
+    </div>
+</div>
+
+<div class="modal" id="register-modal">
+    <h2>Register</h2>
+    <div>
+        <div class="form-item">
+            <label for="registerUsernameInput">New Username:</label>
+            <input type="text" id="registerUsernameInput" placeholder="Username">
+        </div>
+        <div class="form-item">
+            <label for="registerPasswordInput">New Password:</label>
+            <input type="password" id="registerPasswordInput" placeholder="Password">
+        </div>
+        <input type="hidden" name="token" value="<?php echo $_SESSION['token'];?>">
+        <button class="btn" id="register_btn">Register</button>
+        <button class="btn" onclick="closeModal()">Cancel</button>
+    </div>
+</div>
+
+
+<div class="modal" id="create-event-modal">
+    <h2>Create Event</h2>
+    <div>
+        <div class="form-item">
+            <label for="eventTimePicker">Time:</label>
+            <input type="time" value="12:00" id="eventTimePicker">
+        </div>
+        <div class="form-item">
+            <label for="eventTitleInput">Event Title:</label>
+            <input type="text" value="null" id="eventTitleInput" placeholder="Title">
+        </div>
+        <div class="form-item">
+            <label for="importantCheckbox">Important:</label>
+            <input type="checkbox" id="importantCheckbox">
+        </div>
+        <div class="form-item">
+            <label for="eventTag">Tag:</label>
+            <select id="eventTag">
+                <option value="work">Work</option>
+                <option value="study">Study</option>
+                <option value="entertainment">Entertainment</option>
+            </select>
+        </div>
+        <input type="hidden" name="token" value="<?php echo $_SESSION['token'];?>">
+        <button class="btn" id="save_event_btn">Save</button>
+        <button class="btn" onclick="closeModal()">Cancel</button>
+    </div>
+</div>
+
+<div class="modal" id="edit-event-modal">
+    <h2>Edit Event</h2>
+    <div>
+        <div class="form-item">
+            <label for="editEventTimePicker">Time:</label>
+            <input type="time" id="editEventTimePicker">
+        </div>
+        <div class="form-item">
+            <label for="eventTitleInput">Event Title:</label>
+            <input type="text" id="editEventTitleInput" placeholder="Title">
+        </div>
+        <div class="form-item">
+            <label for="importantCheckbox">Important:</label>
+            <input type="checkbox" id="editImportantCheckbox">
+        </div>
+        <div class="form-item">
+            <label for="editEventTag">Tag:</label>
+            <select id="editEventTag">
+                <option value="work">Work</option>
+                <option value="study">Study</option>
+                <option value="entertainment">Entertainment</option>
+            </select>
+        </div>
+        <input type="hidden" id="editEventId">
+        <input type="hidden" name="token" value="<?php echo $_SESSION['token'];?>">
+        <button class="btn" id="edit_event_btn">Update</button>
+        <button class="btn" onclick="closeModal()">Cancel</button>
+    </div>
+</div>
+
+<script>
+    function showLoginModal() {
+        showModal('login-modal')
+    }
+
+    function showRegisterModal() {
+        showModal('register-modal')
+    }
+
+
+    function showModal(id) {
+        document.querySelector("#shade").style.display = "block"
+        document.querySelector(`#${id}`).style.display = "block"
+    }
+
+    function closeModal() {
+        document.querySelectorAll('.modal').forEach(el => {
+            el.style.display = "none"
+        })
+        document.querySelector('#shade').style.display = "none"
+    }
+</script>
+<script type="text/javascript" src="users_ajax.js"></script>
+<script type="text/javascript" src="calendar.js"></script>
+<script type="text/javascript" src="calendar.min.js"></script>
+<script type="text/javascript" src="calendar_form.js"></script>
+<script type="text/javascript" src="events_ajax.js"></script>
+
+</body>
+</html>

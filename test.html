@@ -1,0 +1,22 @@
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <ul id="my-list">
+        <li class="fruits">Apples</li>
+        <li class="citrus">Oranges and <strong>Lemons</strong></li>
+        <li class="berries">Cherries</li>
+    </ul>
+
+    <script>
+        const newLi = document.createElement("li");  // creates a node with the tag name li
+        newLi.appendChild(document.createTextNode("Broccoli"));
+        newLi.setAttribute("class", "veggies");
+        document.getElementById("my-list").appendChild(newLi);
+    </script>
+</body>
+</html>
